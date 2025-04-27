@@ -32,7 +32,7 @@ chain_totals = latest_data.groupby('chain')['circulating'].sum()
 # Calculate USDC percentage of all stablecoins for each chain
 chain_totals = latest_data.groupby('chain')['circulating'].sum()
 usdc_by_chain = latest_data[latest_data['stablecoin_symbol'] == 'USDC'].groupby('chain')['circulating'].sum()
-usdc_share = (usdc_by_chain / chain_totals * 100).round(2)
+usdc_share = usdc_by_chain / chain_totals
 
 # Get dominant stablecoin for each chain
 dominant_stablecoins = latest_data.groupby('chain').apply(
@@ -94,13 +94,13 @@ total_growth_7d = (total_current - total_7d_ago)
 total_growth_90d = (total_current - total_90d_ago)
 
 # Calculate percentage changes
-total_pct_change_30d = (total_growth_30d / total_30d_ago * 100).round(2)
-total_pct_change_7d = (total_growth_7d / total_7d_ago * 100).round(2)
-total_pct_change_90d = (total_growth_90d / total_90d_ago * 100).round(2)
+total_pct_change_30d = total_growth_30d / total_30d_ago
+total_pct_change_7d = total_growth_7d / total_7d_ago
+total_pct_change_90d = total_growth_90d / total_90d_ago
 
-usdc_pct_change_30d = (usdc_growth_30d / usdc_30d_ago * 100).round(2)
-usdc_pct_change_7d = (usdc_growth_7d / usdc_7d_ago * 100).round(2)
-usdc_pct_change_90d = (usdc_growth_90d / usdc_90d_ago * 100).round(2)
+usdc_pct_change_30d = usdc_growth_30d / usdc_30d_ago
+usdc_pct_change_7d = usdc_growth_7d / usdc_7d_ago
+usdc_pct_change_90d = usdc_growth_90d / usdc_90d_ago
 
 # Get USDC native status from metadata
 usdc_native = meta_df[meta_df['stablecoin_symbol'] == 'USDC']
@@ -131,15 +131,15 @@ all_chains_status = pd.Series('Bridged', index=common_chains)
 all_chains_status.update(usdt_status[usdt_status.index.isin(common_chains)])
 
 # Calculate USDC percentage of total stablecoins for each period
-usdc_pct_current = (usdc_current / total_current * 100).round(2)
-usdc_pct_7d_ago = (usdc_7d_ago / total_7d_ago * 100).round(2)
-usdc_pct_30d_ago = (usdc_30d_ago / total_30d_ago * 100).round(2)
-usdc_pct_90d_ago = (usdc_90d_ago / total_90d_ago * 100).round(2)
+usdc_pct_current = usdc_current / total_current
+usdc_pct_7d_ago = usdc_7d_ago / total_7d_ago
+usdc_pct_30d_ago = usdc_30d_ago / total_30d_ago
+usdc_pct_90d_ago = usdc_90d_ago / total_90d_ago
 
 # Calculate change in USDC percentage of total
-usdc_pct_of_total_change_7d = (usdc_pct_current - usdc_pct_7d_ago) / 100  # Convert to decimal
-usdc_pct_of_total_change_30d = (usdc_pct_current - usdc_pct_30d_ago) / 100  # Convert to decimal
-usdc_pct_of_total_change_90d = (usdc_pct_current - usdc_pct_90d_ago) / 100  # Convert to decimal
+usdc_pct_of_total_change_7d = (usdc_pct_current - usdc_pct_7d_ago)
+usdc_pct_of_total_change_30d = (usdc_pct_current - usdc_pct_30d_ago)
+usdc_pct_of_total_change_90d = (usdc_pct_current - usdc_pct_90d_ago)
 
 # Calculate USDC growth rates (percentage change in USDC amount)
 usdc_growth_rate_7d = (usdc_growth_7d / usdc_7d_ago)  # Already in decimal form
@@ -164,25 +164,25 @@ growth_df = pd.DataFrame({
     'Dominant Stablecoin': dominant_stablecoins[common_chains],
     'Current USDC Amount': usdc_current[common_chains],
     'Total Circulating Stables': total_current[common_chains],
-    'USDC % of Total': usdc_pct_current[common_chains] / 100,  # Convert to decimal
+    'USDC % of Total': usdc_pct_current[common_chains],
     # 7d metrics
     'USDC Growth (7d)': usdc_growth_7d[common_chains],
     'USDC % Change (7d)': usdc_growth_rate_7d[common_chains],  # Growth rate of USDC amount
     'USDC % of Total Change (7d)': usdc_pct_of_total_change_7d[common_chains],  # Change in USDC's share
     'Total Growth (7d)': total_growth_7d[common_chains],
-    'Total % Change (7d)': total_pct_change_7d[common_chains] / 100,
+    'Total % Change (7d)': total_pct_change_7d[common_chains],
     # 30d metrics
     'USDC Growth (30d)': usdc_growth_30d[common_chains],
     'USDC % Change (30d)': usdc_growth_rate_30d[common_chains],  # Growth rate of USDC amount
     'USDC % of Total Change (30d)': usdc_pct_of_total_change_30d[common_chains],  # Change in USDC's share
     'Total Growth (30d)': total_growth_30d[common_chains],
-    'Total % Change (30d)': total_pct_change_30d[common_chains] / 100,
+    'Total % Change (30d)': total_pct_change_30d[common_chains],
     # 90d metrics
     'USDC Growth (90d)': usdc_growth_90d[common_chains],
     'USDC % Change (90d)': usdc_growth_rate_90d[common_chains],  # Growth rate of USDC amount
     'USDC % of Total Change (90d)': usdc_pct_of_total_change_90d[common_chains],  # Change in USDC's share
     'Total Growth (90d)': total_growth_90d[common_chains],
-    'Total % Change (90d)': total_pct_change_90d[common_chains] / 100,
+    'Total % Change (90d)': total_pct_change_90d[common_chains],
 })
 
 # Sort by USDC Growth in descending order
@@ -220,7 +220,7 @@ usdt0_supply = latest_usdt0.groupby('chain')['circulating'].sum()
 usdt0_supply = usdt0_supply[usdt0_supply > 0]
 
 total_chain_supply = latest_data[latest_data['chain'].isin(usdt0_supply.index)].groupby('chain')['circulating'].sum()
-usdt0_share = (usdt0_supply / total_chain_supply * 100).round(2)
+usdt0_share = usdt0_supply / total_chain_supply
 
 usdt0_30d_ago = usdt0_data[usdt0_data['date'] == thirty_days_ago].groupby('chain')['circulating'].sum()
 usdt0_growth = (usdt0_supply - usdt0_30d_ago).round(2)
@@ -260,7 +260,7 @@ latest_data = df[df['date'] == latest_date]
 chain_totals = latest_data.groupby('chain')['circulating'].sum()
 
 # Calculate USDC market share
-usdc_launch_dates['USDC % of Total'] = (usdc_launch_dates['circulating'] / chain_totals * 100).round(2)
+usdc_launch_dates['USDC % of Total'] = usdc_launch_dates['circulating'] / chain_totals
 
 # Get dominant stablecoin for each chain
 dominant_stablecoins = latest_data.groupby('chain').apply(

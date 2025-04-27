@@ -27,7 +27,7 @@ for chain in df['chain'].unique():
     thirty_days_ago_total = thirty_days_ago_data['circulating'].sum()
     
     # Calculate growth percentage and raw growth
-    growth_pct = ((latest_total - thirty_days_ago_total) / thirty_days_ago_total * 100) if thirty_days_ago_total > 0 else np.nan
+    growth_pct = ((latest_total - thirty_days_ago_total) / thirty_days_ago_total) if thirty_days_ago_total > 0 else np.nan
     raw_growth = latest_total - thirty_days_ago_total
     
     # Calculate USDC growth if USDC exists on this chain
@@ -38,7 +38,7 @@ for chain in df['chain'].unique():
     if not usdc_data.empty:
         latest_usdc = usdc_data[usdc_data['date'] == latest_date]['circulating'].sum()
         thirty_days_ago_usdc = usdc_data[usdc_data['date'] == thirty_days_ago]['circulating'].sum()
-        usdc_growth_pct = ((latest_usdc - thirty_days_ago_usdc) / thirty_days_ago_usdc * 100) if thirty_days_ago_usdc > 0 else np.nan
+        usdc_growth_pct = ((latest_usdc - thirty_days_ago_usdc) / thirty_days_ago_usdc) if thirty_days_ago_usdc > 0 else np.nan
         usdc_raw_growth = latest_usdc - thirty_days_ago_usdc
     
     chain_growth.append({
@@ -60,12 +60,12 @@ growth_df = pd.DataFrame(chain_growth)
 growth_df = growth_df.sort_values('raw_growth', ascending=False)
 
 # Format the numbers for better readability
-growth_df['thirty_days_ago_supply'] = growth_df['thirty_days_ago_supply'].round(2)
-growth_df['latest_supply'] = growth_df['latest_supply'].round(2)
-growth_df['raw_growth'] = growth_df['raw_growth'].round(2)
-growth_df['growth_pct'] = growth_df['growth_pct'].round(2)
-growth_df['usdc_raw_growth'] = growth_df['usdc_raw_growth'].round(2)
-growth_df['usdc_growth_pct'] = growth_df['usdc_growth_pct'].round(2)
+growth_df['thirty_days_ago_supply'] = growth_df['thirty_days_ago_supply']
+growth_df['latest_supply'] = growth_df['latest_supply']
+growth_df['raw_growth'] = growth_df['raw_growth']
+growth_df['growth_pct'] = growth_df['growth_pct']
+growth_df['usdc_raw_growth'] = growth_df['usdc_raw_growth']
+growth_df['usdc_growth_pct'] = growth_df['usdc_growth_pct']
 
 # Save results to CSV
 growth_df.to_csv('chain_stablecoin_growth.csv', index=False)

@@ -36,7 +36,7 @@ usdc = usdc.rename(columns={'circulating': 'usdc'})
 # Merge
 merged = pd.merge(total, usdc, on=['week', 'chain'], how='left')
 merged['usdc'] = merged['usdc'].fillna(0)
-merged['usdc_pct'] = merged['usdc'] / merged['total'] * 100
+merged['usdc_pct'] = merged['usdc'] / merged['total']
 
 # Pivot to plot
 pivot = merged.pivot(index='week', columns='chain', values='usdc_pct')
