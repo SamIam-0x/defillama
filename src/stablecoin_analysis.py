@@ -429,6 +429,135 @@ print("\nChains with highest USDC growth:")
 usdc_growth = growth_df.dropna(subset=['usdc_growth_pct']).sort_values('usdc_growth_pct', ascending=False)
 print(usdc_growth[['chain', 'usdc_raw_growth', 'usdc_growth_pct']].head(10).to_string())
 
+# 9. Largest growth in USDT over past 30 days
+usdt_data = df[df['stablecoin_symbol'] == 'USDT']
+
+# Get current circulating amounts
+usdt_current = usdt_data[usdt_data['date'] == latest_date].groupby('chain')['circulating'].sum()
+
+# Get growth over different periods
+usdt_30d_ago = usdt_data[usdt_data['date'] == thirty_days_ago].groupby('chain')['circulating'].sum()
+usdt_7d_ago = usdt_data[usdt_data['date'] == seven_days_ago].groupby('chain')['circulating'].sum()
+usdt_90d_ago = usdt_data[usdt_data['date'] == ninety_days_ago].groupby('chain')['circulating'].sum()
+
+# Calculate growth amounts
+usdt_growth_30d = (usdt_current - usdt_30d_ago)
+usdt_growth_7d = (usdt_current - usdt_7d_ago)
+usdt_growth_90d = (usdt_current - usdt_90d_ago)
+
+# Calculate percentage changes
+usdt_pct_change_30d = usdt_growth_30d / usdt_30d_ago
+usdt_pct_change_7d = usdt_growth_7d / usdt_7d_ago
+usdt_pct_change_90d = usdt_growth_90d / usdt_90d_ago
+
+# Calculate USDT percentage of total stablecoins for each period
+usdt_pct_current = usdt_current / total_current
+usdt_pct_7d_ago = usdt_7d_ago / total_7d_ago
+usdt_pct_30d_ago = usdt_30d_ago / total_30d_ago
+usdt_pct_90d_ago = usdt_90d_ago / total_90d_ago
+
+# Calculate change in USDT percentage of total
+usdt_pct_of_total_change_7d = (usdt_pct_current - usdt_pct_7d_ago)
+usdt_pct_of_total_change_30d = (usdt_pct_current - usdt_pct_30d_ago)
+usdt_pct_of_total_change_90d = (usdt_pct_current - usdt_pct_90d_ago)
+
+# Get USDT native status from metadata
+usdt_native = meta_df[meta_df['stablecoin_symbol'] == 'USDT']
+usdt_native = usdt_native.groupby('chain')['native_bridged_standard'].apply(
+    lambda x: (
+        'USDT0' if any(val == 'USDT0' for val in x.values)
+        else 'native' if any(val == 'native' for val in x.values)
+        else 'Bridged'
+    )
+)
+
+# Get common chains that have both USDT and total stablecoin data
+usdt_chains = usdt_current.index
+common_chains = usdt_chains.intersection(total_current.index)
+
+# Create a DataFrame with numeric values only for common chains
+usdt_growth_df = pd.DataFrame({
+    'Chain': common_chains,
+    'USDT Status': usdt_native[usdt_chains].reindex(common_chains, fill_value='Bridged'),
+    'Chain Launch Date': chain_launch_dates[common_chains].dt.strftime('%Y-%m-%d'),
+    'Dominant Stablecoin': dominant_stablecoins[common_chains],
+    'Current USDT Amount': usdt_current[common_chains],
+    'Total Circulating Stables': total_current[common_chains],
+    'USDT % of Total': usdt_pct_current[common_chains],
+    # 7d metrics
+    'USDT Growth (7d)': usdt_growth_7d[common_chains],
+    'USDT % Change (7d)': usdt_pct_change_7d[common_chains],
+    'USDT % of Total Change (7d)': usdt_pct_of_total_change_7d[common_chains],
+    'Total Growth (7d)': total_growth_7d[common_chains],
+    'Total % Change (7d)': total_pct_change_7d[common_chains],
+    # 30d metrics
+    'USDT Growth (30d)': usdt_growth_30d[common_chains],
+    'USDT % Change (30d)': usdt_pct_change_30d[common_chains],
+    'USDT % of Total Change (30d)': usdt_pct_of_total_change_30d[common_chains],
+    'Total Growth (30d)': total_growth_30d[common_chains],
+    'Total % Change (30d)': total_pct_change_30d[common_chains],
+    # 90d metrics
+    'USDT Growth (90d)': usdt_growth_90d[common_chains],
+    'USDT % Change (90d)': usdt_pct_change_90d[common_chains],
+    'USDT % of Total Change (90d)': usdt_pct_of_total_change_90d[common_chains],
+    'Total Growth (90d)': total_growth_90d[common_chains],
+    'Total % Change (90d)': total_pct_change_90d[common_chains],
+})
+
+# Sort by USDT Growth in descending order
+usdt_growth_df = usdt_growth_df.sort_values('USDT Growth (30d)', ascending=False)
+usdt_growth_df.to_csv('usdt_growth_analysis.csv', index=False)
+
+# Format values for printing
+usdt_growth_df_print = usdt_growth_df.copy()
+usdt_growth_df_print['Current USDT Amount'] = usdt_growth_df_print['Current USDT Amount'].apply(lambda x: f"${x:,.2f}")
+usdt_growth_df_print['Total Circulating Stables'] = usdt_growth_df_print['Total Circulating Stables'].apply(lambda x: f"${x:,.2f}")
+usdt_growth_df_print['USDT % of Total'] = usdt_growth_df_print['USDT % of Total'].apply(lambda x: f"{x:.2%}")
+usdt_growth_df_print['USDT Growth (7d)'] = usdt_growth_df_print['USDT Growth (7d)'].apply(lambda x: f"${x:,.2f}")
+usdt_growth_df_print['USDT % Change (7d)'] = usdt_growth_df_print['USDT % Change (7d)'].apply(lambda x: f"{x:.2%}")
+usdt_growth_df_print['USDT % of Total Change (7d)'] = usdt_growth_df_print['USDT % of Total Change (7d)'].apply(lambda x: f"{x:+.2%}")
+usdt_growth_df_print['Total Growth (7d)'] = usdt_growth_df_print['Total Growth (7d)'].apply(lambda x: f"${x:,.2f}")
+usdt_growth_df_print['Total % Change (7d)'] = usdt_growth_df_print['Total % Change (7d)'].apply(lambda x: f"{x:.2%}")
+usdt_growth_df_print['USDT Growth (30d)'] = usdt_growth_df_print['USDT Growth (30d)'].apply(lambda x: f"${x:,.2f}")
+usdt_growth_df_print['USDT % Change (30d)'] = usdt_growth_df_print['USDT % Change (30d)'].apply(lambda x: f"{x:.2%}")
+usdt_growth_df_print['USDT % of Total Change (30d)'] = usdt_growth_df_print['USDT % of Total Change (30d)'].apply(lambda x: f"{x:+.2%}")
+usdt_growth_df_print['Total Growth (30d)'] = usdt_growth_df_print['Total Growth (30d)'].apply(lambda x: f"${x:,.2f}")
+usdt_growth_df_print['Total % Change (30d)'] = usdt_growth_df_print['Total % Change (30d)'].apply(lambda x: f"{x:.2%}")
+usdt_growth_df_print['USDT Growth (90d)'] = usdt_growth_df_print['USDT Growth (90d)'].apply(lambda x: f"${x:,.2f}")
+usdt_growth_df_print['USDT % Change (90d)'] = usdt_growth_df_print['USDT % Change (90d)'].apply(lambda x: f"{x:.2%}")
+usdt_growth_df_print['USDT % of Total Change (90d)'] = usdt_growth_df_print['USDT % of Total Change (90d)'].apply(lambda x: f"{x:+.2%}")
+usdt_growth_df_print['Total Growth (90d)'] = usdt_growth_df_print['Total Growth (90d)'].apply(lambda x: f"${x:,.2f}")
+usdt_growth_df_print['Total % Change (90d)'] = usdt_growth_df_print['Total % Change (90d)'].apply(lambda x: f"{x:.2%}")
+
+print("\n9. Growth in USDT and Total Stablecoins Over Past 30 Days (Sorted by USDT Growth):")
+print(usdt_growth_df_print.to_string())
+
+# Plot USDT growth vs total growth
+plot_df = usdt_growth_df.copy()
+plot_df = plot_df[(abs(plot_df['USDT Growth (30d)']) >= 100000) | (abs(plot_df['Total Growth (30d)']) >= 100000)]
+
+chains = plot_df['Chain'].tolist()
+usdt_growth = plot_df['USDT Growth (30d)'].values
+total_growth = plot_df['Total Growth (30d)'].values
+x = np.arange(len(chains))
+bar_width = 0.35
+
+fig, ax = plt.subplots(figsize=(12, 6))
+bars1 = ax.bar(x - bar_width/2, usdt_growth, bar_width, label='USDT Growth')
+bars2 = ax.bar(x + bar_width/2, total_growth, bar_width, label='Total Growth')
+
+ax.set_xlabel('Chain')
+ax.set_ylabel('Growth (USD)')
+ax.set_title('USDT vs Total Stablecoin Growth Over Last 30 Days\n(Only showing chains with growth > $100,000)')
+ax.set_xticks(x)
+ax.set_xticklabels(chains, rotation=45)
+ax.legend()
+ax.grid(True, axis='y', linestyle='--', alpha=0.6)
+
+plt.tight_layout()
+plt.savefig('usdt_growth_comparison.png')
+plt.close()
+
 # After all CSV files are generated, upload to Google Sheets
 try:
     from google_sheets_upload import main as upload_to_sheets

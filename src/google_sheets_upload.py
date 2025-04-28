@@ -102,7 +102,8 @@ def main():
         ('usdt0_performance.csv', 'USDT0 Performance'),
         ('usdc_launch_dates.csv', 'USDC Launch Dates'),
         ('stablecoin_launch_analysis.csv', 'Stablecoin Launch Analysis'),
-        ('chain_stablecoin_growth.csv', '30-Day Growth Analysis')
+        ('chain_stablecoin_growth.csv', '30-Day Growth Analysis'),
+        ('usdt_growth_analysis.csv', 'USDT Growth Analysis')
     ]
     
     for csv_file, sheet_name in files_to_upload:
