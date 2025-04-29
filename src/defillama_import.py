@@ -1,8 +1,12 @@
 from defillama import DefiLlama
 import pandas as pd
 import json
-# initialize api client
+import urllib3
+urllib3.disable_warnings()
+
+# initialize api client with verify=False
 llama = DefiLlama()
+llama.session.verify = False
 
 # get list of stablecoins
 response = llama.get_stablecoins(include_prices=True)
@@ -91,7 +95,7 @@ df = pd.DataFrame(all_records)
 df['native_bridged_standard'] = ''
 
 # Set USDT0 for specific chains
-usdt0_chains = ['Corn', 'Unichain', 'Sei', 'Berachain', 'Ink', 'Optimism', 'Arbitrum']
+usdt0_chains = ['Corn', 'Unichain', 'Sei', 'Berachain', 'Ink', 'Optimism', 'Arbitrum', 'Flare']
 df.loc[(df['stablecoin_symbol'] == 'USDT') & (df['chain'].isin(usdt0_chains)), 'native_bridged_standard'] = 'USDT0'
 
 # Set USDC as native for specific chains
