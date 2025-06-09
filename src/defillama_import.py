@@ -102,7 +102,7 @@ df.loc[(df['stablecoin_symbol'] == 'USDT') & (df['chain'].isin(usdt0_chains)), '
 usdc_native_chains = [
     'Ethereum', 'Solana', 'Base', 'Arbitrum', 'Avalanche', 'Polygon', 'Sui',
     'Noble', 'Stellar', 'Aptos', 'Optimism', 'Algorand', 'Near', 'Hedera',
-    'zkSync', 'Polkadot', 'Tron', 'Celo', 'Linea', 'Unichain'
+    'Polkadot', 'Tron', 'Celo', 'Linea', 'Unichain', 'zkSync Era'
 ]
 df.loc[(df['stablecoin_symbol'] == 'USDC') & (df['chain'].isin(usdc_native_chains)), 'native_bridged_standard'] = 'native'
 
