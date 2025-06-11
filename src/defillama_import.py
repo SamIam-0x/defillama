@@ -102,8 +102,8 @@ df.loc[(df['stablecoin_symbol'] == 'USDT') & (df['chain'].isin(usdt0_chains)), '
 usdc_native_chains = [
     'Ethereum', 'Solana', 'Base', 'Arbitrum', 'Avalanche', 'Polygon', 'Sui',
     'Noble', 'Stellar', 'Aptos', 'Optimism', 'Algorand', 'Near', 'Hedera',
-    'Polkadot', 'Tron', 'Celo', 'Linea', 'Unichain', 'zkSync Era', 'Sonic', 'World Chain', 'Linea'
-]
+    'Polkadot', 'Tron', 'Celo', 'Linea', 'Unichain', 'zkSync Era', 'Sonic', 'World Chain'
+    ]
 df.loc[(df['stablecoin_symbol'] == 'USDC') & (df['chain'].isin(usdc_native_chains)), 'native_bridged_standard'] = 'native'
 
 # Set USDT as native for specific chains
@@ -120,7 +120,8 @@ usdt_native_chains = [
     'Kusama',  # Statemine Asset via Kusama Network
     'Tezos',  # Tezos Token via Tezos Blockchain
     'Ton',  # Ton Jetton via Ton Blockchain
-    'Aptos'  # Fungible Asset via Aptos Blockchain
+    'Aptos',  # Fungible Asset via Aptos Blockchain,
+    'Kaia'  # Fungible Asset via Kaia Blockchain
 ]
 df.loc[(df['stablecoin_symbol'] == 'USDT') & (df['chain'].isin(usdt_native_chains)), 'native_bridged_standard'] = 'native'
 
