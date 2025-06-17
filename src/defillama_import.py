@@ -5,9 +5,12 @@ import subprocess
 import requests
 from datetime import datetime, timedelta
 import time
+import urllib3
+urllib3.disable_warnings()
 
-# initialize api client
+# initialize api client with verify=False
 llama = DefiLlama()
+llama.session.verify = False
 
 # get list of stablecoins
 response = llama.get_stablecoins(include_prices=True)
@@ -98,14 +101,14 @@ df = pd.DataFrame(all_records)
 df['native_bridged_standard'] = ''
 
 # Set USDT0 for specific chains
-usdt0_chains = ['Corn', 'Unichain', 'Sei', 'Berachain', 'Ink', 'Optimism', 'Arbitrum', 'Flare', 'Hyperliquid']
+usdt0_chains = ['Corn', 'Unichain', 'Sei', 'Berachain', 'Ink', 'Optimism', 'Arbitrum', 'Flare', 'HyperLiquid L1']
 df.loc[(df['stablecoin_symbol'] == 'USDT') & (df['chain'].isin(usdt0_chains)), 'native_bridged_standard'] = 'USDT0'
 
 # Set USDC as native for specific chains
 usdc_native_chains = [
     'Ethereum', 'Solana', 'Base', 'Arbitrum', 'Avalanche', 'Polygon', 'Sui',
     'Noble', 'Stellar', 'Aptos', 'Optimism', 'Algorand', 'Near', 'Hedera',
-    'Polkadot', 'Tron', 'Celo', 'Linea', 'Unichain', 'zkSync Era', 'Sonic', 'OP Mainnet', 'ZKsync Era'
+    'Polkadot', 'Tron', 'Celo', 'Linea', 'Unichain', 'zkSync Era', 'Sonic', 'World Chain'
 ]
 df.loc[(df['stablecoin_symbol'] == 'USDC') & (df['chain'].isin(usdc_native_chains)), 'native_bridged_standard'] = 'native'
 
