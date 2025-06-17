@@ -91,20 +91,24 @@ def update_sheet(service, sheet_name, data):
         body=body
     ).execute()
 
-def main():
+def main(files_to_upload=None):
     creds = get_credentials()
     service = build('sheets', 'v4', credentials=creds)
     
-    # List of CSV files and their corresponding sheet names
-    files_to_upload = [
-        ('usdt_launch_dates.csv', 'USDT Launch Dates'),
-        ('usdc_growth_analysis.csv', 'USDC Growth Analysis'),
-        ('usdt0_performance.csv', 'USDT0 Performance'),
-        ('usdc_launch_dates.csv', 'USDC Launch Dates'),
-        ('stablecoin_launch_analysis.csv', 'Stablecoin Launch Analysis'),
-        ('chain_stablecoin_growth.csv', '30-Day Growth Analysis'),
-        ('usdt_growth_analysis.csv', 'USDT Growth Analysis')
-    ]
+    # Default list of CSV files and their corresponding sheet names if none provided
+    if files_to_upload is None:
+        files_to_upload = [
+            ('usdt_launch_dates.csv', 'USDT Launch Dates'),
+            ('usdc_growth_analysis.csv', 'USDC Growth Analysis'),
+            ('usdt0_performance.csv', 'USDT0 Performance'),
+            ('usdc_launch_dates.csv', 'USDC Launch Dates'),
+            ('stablecoin_launch_analysis.csv', 'Stablecoin Launch Analysis'),
+            ('chain_stablecoin_growth.csv', '30-Day Growth Analysis'),
+            ('usdt_growth_analysis.csv', 'USDT Growth Analysis'),
+            ('stablecoin_aggregate_growth.csv', 'Stablecoin_growth'),
+            ('chain_launch_analysis.csv', 'Chain Launch Analysis'),
+            ('chain_tvl_stable_analysis.csv', 'Defi Chain Launch')
+        ]
     
     for csv_file, sheet_name in files_to_upload:
         if os.path.exists(csv_file):
