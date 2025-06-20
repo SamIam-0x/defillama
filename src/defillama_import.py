@@ -101,14 +101,22 @@ df = pd.DataFrame(all_records)
 df['native_bridged_standard'] = ''
 
 # Set USDT0 for specific chains
-usdt0_chains = ['Corn', 'Unichain', 'Sei', 'Berachain', 'Ink', 'Optimism', 'Arbitrum', 'Flare', 'HyperLiquid L1']
+usdt0_chains = ['Corn', 
+                'Unichain', 
+                'Sei', 
+                'Berachain', 
+                'Ink', 
+                'Optimism', 
+                'Arbitrum', 
+                'Flare', 
+                'HyperLiquid L1']
 df.loc[(df['stablecoin_symbol'] == 'USDT') & (df['chain'].isin(usdt0_chains)), 'native_bridged_standard'] = 'USDT0'
 
 # Set USDC as native for specific chains
 usdc_native_chains = [
     'Ethereum', 'Solana', 'Base', 'Arbitrum', 'Avalanche', 'Polygon', 'Sui',
     'Noble', 'Stellar', 'Aptos', 'Optimism', 'Algorand', 'Near', 'Hedera',
-    'Polkadot', 'Tron', 'Celo', 'Linea', 'Unichain', 'zkSync Era', 'Sonic', 'World Chain'
+    'Polkadot', 'Tron', 'Celo', 'Linea', 'Unichain', 'zkSync Era', 'Sonic', 'World Chain', 'Ripple'
 ]
 df.loc[(df['stablecoin_symbol'] == 'USDC') & (df['chain'].isin(usdc_native_chains)), 'native_bridged_standard'] = 'native'
 
