@@ -12,6 +12,10 @@ urllib3.disable_warnings()
 llama = DefiLlama()
 llama.session.verify = False
 
+# Create a requests session with SSL verification disabled
+session = requests.Session()
+session.verify = False
+
 # get list of stablecoins
 response = llama.get_stablecoins(include_prices=True)
 time.sleep(1)  # Add sleep after first API call
@@ -171,7 +175,7 @@ print("TVL data saved to tvl_data.json and tvl_data.csv")
 # Get chain TVL data
 print("\nFetching chain TVL data...")
 chains_url = "https://api.llama.fi/v2/chains"
-response = requests.get(chains_url)
+response = session.get(chains_url)
 time.sleep(1)  # Add sleep after chains API call
 chains_data = response.json()
 
@@ -192,7 +196,7 @@ for i, chain in enumerate(top_chains, 1):
         historical_url = f"https://api.llama.fi/v2/historicalChainTvl/{chain_name}"
         print(f"Fetching data from: {historical_url}")  # Debug print URL
         headers = {'User-Agent': 'curl/7.64.1'}
-        hist_response = requests.get(historical_url, headers=headers)
+        hist_response = session.get(historical_url, headers=headers)
         time.sleep(1)  # Add sleep after each historical TVL API call
         print(f"Status code: {hist_response.status_code}")
         print(f"Headers: {hist_response.headers}")
