@@ -105,29 +105,54 @@ df = pd.DataFrame(all_records)
 df['native_bridged_standard'] = ''
 
 # Set USDT0 for specific chains
-usdt0_chains = ['Corn', 
-                'Unichain', 
-                'Sei', 
-                'Berachain', 
-                'Ink', 
-                'Optimism', 
-                'Arbitrum', 
-                'Flare', 
-                'HyperLiquid L1']
+usdt0_chains = [
+    'Corn', 
+    'Unichain', 
+    'Sei', 
+    'Berachain', 
+    'Ink', 
+    'Optimism', 
+    'Arbitrum', 
+    'Flare', 
+    'Hyperliquid L1'
+    ]
 df.loc[(df['stablecoin_symbol'] == 'USDT') & (df['chain'].isin(usdt0_chains)), 'native_bridged_standard'] = 'USDT0'
 
 # Set USDC as native for specific chains
 usdc_native_chains = [
-    'Ethereum', 'Solana', 'Base', 'Arbitrum', 'Avalanche', 'Polygon', 'Sui',
-    'Noble', 'Stellar', 'Aptos', 'Optimism', 'Algorand', 'Near', 'Hedera',
-    'Polkadot', 'Tron', 'Celo', 'Linea', 'Unichain', 'zkSync Era', 'Sonic', 'World Chain', 'Ripple'
-]
+    'Ethereum', 
+    'Solana', 
+    'Base', 
+    'Arbitrum', 
+    'Avalanche', 
+    'Polygon', 
+    'Sui',
+    'Noble', 
+    'Stellar', 
+    'Aptos', 
+    'Optimism', 
+    'Algorand', 
+    'Near', 
+    'Hedera',
+    'Polkadot', 
+    'Tron', 
+    'Celo', 
+    'Linea', 
+    'Unichain', 
+    'ZKSync Era', 
+    'Sonic', 
+    'World Chain', 
+    'Ripple'
+    ]
 df.loc[(df['stablecoin_symbol'] == 'USDC') & (df['chain'].isin(usdc_native_chains)), 'native_bridged_standard'] = 'native'
 
 # Set USDT as native for specific chains
 usdt_native_chains = [
     'Bitcoin',  # Omni Protocol Token via Bitcoin Blockchain
-    'Ethereum', 'Avalanche', 'Cosmos', 'Celo',  # ERC20 Token via various blockchains
+    'Ethereum', 
+    'Avalanche', 
+    'Cosmos', 
+    'Celo',  # ERC20 Token via various blockchains
     'Tron',  # TRC20 Token via Tron Blockchain
     'EOS',  # EOSIO.TOKEN via EOS Blockchain
     'Liquid',  # Liquid Asset via Liquid Blockchain
