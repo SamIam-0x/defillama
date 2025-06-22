@@ -18,7 +18,7 @@ session.verify = False
 
 # get list of stablecoins
 response = llama.get_stablecoins(include_prices=True)
-time.sleep(1)  # Add sleep after first API call
+time.sleep(0.25)  # Add sleep after first API call
 
 # saving response to json
 with open('stablecoins_list.json', 'w') as f:
@@ -68,7 +68,7 @@ for _, stablecoin in top_100_stablecoins.iterrows():
     try:
         # Get historical mcap sum of all stablecoins in a chain
         response = llama.get_stablecoins_historical_mcap_n_chain_distribution(stablecoin_id=stablecoin_id)
-        time.sleep(1)  # Add sleep after each stablecoin API call
+        time.sleep(0.25)  # Add sleep after each stablecoin API call
         
         # Print response structure for debugging
         print(f"Response type for {stablecoin['name']}:", type(response))
@@ -325,7 +325,7 @@ except Exception as e:
 # Get TVL data for all chains
 print("\nFetching TVL data for all chains...")
 tvl_data = llama.get_all_protocols()
-time.sleep(1)  # Add sleep after TVL API call
+time.sleep(0.25)  # Add sleep after TVL API call
 
 # Save TVL data to JSON
 with open('tvl_data.json', 'w') as f:
@@ -343,7 +343,7 @@ print("TVL data saved to tvl_data.json and tvl_data.csv")
 print("\nFetching chain TVL data...")
 chains_url = "https://api.llama.fi/v2/chains"
 response = session.get(chains_url)
-time.sleep(1)  # Add sleep after chains API call
+time.sleep(0.25)  # Add sleep after chains API call
 chains_data = response.json()
 
 # Sort chains by TVL and get top 200
@@ -364,7 +364,7 @@ for i, chain in enumerate(top_chains, 1):
         print(f"Fetching data from: {historical_url}")  # Debug print URL
         headers = {'User-Agent': 'curl/7.64.1'}
         hist_response = session.get(historical_url, headers=headers)
-        time.sleep(1)  # Add sleep after each historical TVL API call
+        time.sleep(0.25)  # Add sleep after each historical TVL API call
         print(f"Status code: {hist_response.status_code}")
         print(f"Headers: {hist_response.headers}")
         if hist_response.status_code == 200:
