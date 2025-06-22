@@ -3,9 +3,12 @@ __pycache__/
 *.pyc
 *.pyo
 *.pyd
+*.png
 .DS_Store
 /data_files/*
 key.json
 credentials.json
 *.csv
 *.json
+chain_data.db
+
