@@ -180,6 +180,148 @@ meta_df = df.drop(columns=['date', 'circulating']).groupby(['chain', 'stablecoin
 # saving meta df to csv
 meta_df.to_csv('meta_stablecoins_chain_distribution.csv', index=False)
 
+# USDC Market Share Analysis
+print("\n=== USDC Market Share Analysis ===")
+
+# Filter data for the last 90 days
+ninety_days_ago = datetime.now() - timedelta(days=90)
+recent_df = df[df['date'] >= ninety_days_ago].copy()
+
+# Get all chains where USDC is present
+usdc_chains = recent_df[recent_df['stablecoin_symbol'] == 'USDC']['chain'].unique()
+print(f"USDC is present on {len(usdc_chains)} chains")
+
+# Get today's total stablecoin circulating supply for each chain to determine top 10
+latest_date = recent_df['date'].max()
+today_total_data = recent_df[recent_df['date'] == latest_date].copy()
+
+# Calculate total stablecoin supply per chain today
+today_total_stablecoins = today_total_data.groupby('chain')['circulating'].sum().sort_values(ascending=False)
+
+# Get top 10 chains by total stablecoin circulating supply today
+top_10_total_chains = today_total_stablecoins.head(10).index.tolist()
+
+print(f"\nTop 10 chains by total stablecoin circulating supply today ({latest_date.strftime('%Y-%m-%d')}):")
+for i, chain in enumerate(top_10_total_chains, 1):
+    supply = today_total_stablecoins[chain]
+    print(f"{i:2d}. {chain}: ${supply:,.2f}")
+
+# Calculate daily market share for top 10 chains only
+usdc_market_share_data = []
+
+for chain in top_10_total_chains:
+    print(f"\nProcessing USDC market share for chain: {chain}")
+    
+    # Get data for this specific chain
+    chain_data = recent_df[recent_df['chain'] == chain].copy()
+    
+    # Group by date and calculate total stablecoin supply and USDC supply
+    daily_totals = chain_data.groupby('date')['circulating'].sum().reset_index()
+    daily_totals.rename(columns={'circulating': 'total_stablecoin_supply'}, inplace=True)
+    
+    # Get USDC data for this chain
+    usdc_data = chain_data[chain_data['stablecoin_symbol'] == 'USDC'].copy()
+    
+    # Merge USDC data with daily totals
+    if not usdc_data.empty:
+        usdc_daily = usdc_data.groupby('date')['circulating'].sum().reset_index()
+        usdc_daily.rename(columns={'circulating': 'usdc_supply'}, inplace=True)
+        
+        # Merge with daily totals
+        merged_data = pd.merge(daily_totals, usdc_daily, on='date', how='left')
+        merged_data['usdc_supply'] = merged_data['usdc_supply'].fillna(0)
+        
+        # Calculate market share percentage
+        merged_data['usdc_market_share_pct'] = (
+            merged_data['usdc_supply'] / merged_data['total_stablecoin_supply'] * 100
+        )
+        
+        # Add chain information
+        merged_data['chain'] = chain
+        
+        # Select relevant columns and add to results
+        result_data = merged_data[['date', 'chain', 'usdc_supply', 'total_stablecoin_supply', 'usdc_market_share_pct']].copy()
+        usdc_market_share_data.append(result_data)
+        
+        # Print summary statistics
+        avg_market_share = merged_data['usdc_market_share_pct'].mean()
+        max_market_share = merged_data['usdc_market_share_pct'].max()
+        min_market_share = merged_data['usdc_market_share_pct'].min()
+        latest_market_share = merged_data['usdc_market_share_pct'].iloc[-1]
+        today_total_supply = today_total_stablecoins[chain]
+        today_usdc_supply = today_total_data[
+            (today_total_data['chain'] == chain) & 
+            (today_total_data['stablecoin_symbol'] == 'USDC')
+        ]['circulating'].sum()
+        
+        print(f"  ✓ {chain}: Avg: {avg_market_share:.2f}%, Max: {max_market_share:.2f}%, Min: {min_market_share:.2f}%, Latest: {latest_market_share:.2f}%")
+        print(f"     Today's Total Stablecoins: ${today_total_supply:,.2f}")
+        print(f"     Today's USDC Supply: ${today_usdc_supply:,.2f}")
+    else:
+        print(f"  ✗ No USDC data found for {chain}")
+
+# Combine all chain data
+if usdc_market_share_data:
+    usdc_market_share_df = pd.concat(usdc_market_share_data, ignore_index=True)
+    
+    # Sort by date and chain
+    usdc_market_share_df = usdc_market_share_df.sort_values(['date', 'chain'])
+    
+    # Save to CSV
+    usdc_market_share_df.to_csv('usdc_market_share_90days.csv', index=False)
+    
+    print(f"\nUSDC market share data saved to usdc_market_share_90days.csv")
+    print(f"Total records: {len(usdc_market_share_df)}")
+    
+    # Print summary statistics across top 10 chains
+    print("\n=== USDC Market Share Summary - Top 10 Chains by Total Stablecoins (Last 90 Days) ===")
+    summary_stats = usdc_market_share_df.groupby('chain')['usdc_market_share_pct'].agg([
+        'mean', 'max', 'min', 'std'
+    ]).round(2)
+    summary_stats.columns = ['Avg_Market_Share_%', 'Max_Market_Share_%', 'Min_Market_Share_%', 'Std_Dev_%']
+    
+    # Add today's total stablecoin supply and USDC supply to the summary
+    summary_stats['Today_Total_Stablecoins'] = summary_stats.index.map(today_total_stablecoins)
+    
+    # Calculate today's USDC supply for each chain
+    today_usdc_supplies = {}
+    for chain in summary_stats.index:
+        usdc_supply = today_total_data[
+            (today_total_data['chain'] == chain) & 
+            (today_total_data['stablecoin_symbol'] == 'USDC')
+        ]['circulating'].sum()
+        today_usdc_supplies[chain] = usdc_supply
+    
+    summary_stats['Today_USDC_Supply'] = summary_stats.index.map(today_usdc_supplies)
+    summary_stats = summary_stats.sort_values('Today_Total_Stablecoins', ascending=False)
+    
+    print(summary_stats.to_string())
+    
+    # Save summary statistics
+    summary_stats.to_csv('usdc_market_share_summary.csv')
+    print(f"\nSummary statistics saved to usdc_market_share_summary.csv")
+    
+else:
+    print("No USDC market share data available")
+
+# Upload USDC market share data to Google Sheets
+try:
+    from google_sheets_upload import main as upload_to_sheets
+    
+    # Define files to upload for USDC market share analysis
+    usdc_files_to_upload = [
+        ('usdc_market_share_90days.csv', 'USDC Market Share 90 Days'),
+        ('usdc_market_share_summary.csv', 'USDC Market Share Summary')
+    ]
+    
+    print("\n=== Uploading USDC Market Share Data to Google Sheets ===")
+    upload_to_sheets(usdc_files_to_upload)
+    print("✓ USDC market share data successfully uploaded to Google Sheets")
+    
+except Exception as e:
+    print(f"Error uploading USDC market share data to Google Sheets: {e}")
+    print("USDC market share data files have been saved locally")
+
 # Get TVL data for all chains
 print("\nFetching TVL data for all chains...")
 tvl_data = llama.get_all_protocols()
