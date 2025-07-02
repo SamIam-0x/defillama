@@ -44,11 +44,21 @@ dominant_stablecoins = latest_data.groupby('chain').apply(
 usdt_launch_dates['USDC % of Chain Stables'] = usdc_share
 usdt_launch_dates['Dominant Stablecoin'] = dominant_stablecoins
 
+# Get USDT native/bridged status from metadata
+usdt_status = meta_df[meta_df['stablecoin_symbol'] == 'USDT'].groupby('chain')['native_bridged_standard'].apply(
+    lambda x: (
+        'USDT0' if any(val == 'USDT0' for val in x.values)
+        else 'native' if any(val == 'native' for val in x.values)
+        else 'Bridged'
+    )
+)
+
 # Save USDT launch dates data
 usdt_launch_dates_df = pd.DataFrame({
     'Chain': usdt_launch_dates.index,
     'Launch Date': usdt_launch_dates['date'].dt.strftime('%Y-%m-%d'),
     'Current Amount': usdt_launch_dates['circulating'],
+    'USDT Status': usdt_status.reindex(usdt_launch_dates.index, fill_value='Bridged'),
     'USDC % of Chain Stables': usdt_launch_dates['USDC % of Chain Stables'],
     'Dominant Stablecoin': usdt_launch_dates['Dominant Stablecoin']
 })
@@ -214,6 +224,171 @@ growth_df_print['Total % Change (90d)'] = growth_df_print['Total % Change (90d)'
 print("\n3. Growth in USDC and Total Stablecoins Over Past 30 Days (Sorted by USDC Growth):")
 print(growth_df_print.to_string())
 
+# 4. Rolling 7-Day USDC Growth Analysis
+print("\n4. Creating Rolling 7-Day USDC Growth Analysis...")
+
+# Create rolling 7-day analysis
+rolling_data = []
+
+# Get all dates in the dataset
+all_dates = df['date'].unique()
+all_dates = sorted(all_dates)
+
+# Only process the latest date
+current_date = all_dates[-1]
+if current_date >= all_dates[96]:  # Ensure we have enough data for 90d + 7d rolling window (97 days total)
+        
+    # Calculate rolling 7-day averages for current period (last 7 days: days 0-6)
+    current_7d_dates = [current_date - timedelta(days=i) for i in range(7)]
+    current_7d_data = df[df['date'].isin(current_7d_dates)]
+    
+    # Calculate rolling 7-day averages for 7 days ago period (days 7-13 ago)
+    past_7d_dates = [current_date - timedelta(days=i) for i in range(7, 14)]
+    past_7d_data = df[df['date'].isin(past_7d_dates)]
+    
+    # Calculate rolling 7-day averages for 30 days ago period (days 30-36 ago)
+    past_30d_dates = [current_date - timedelta(days=i) for i in range(30, 37)]
+    past_30d_data = df[df['date'].isin(past_30d_dates)]
+    
+    # Calculate rolling 7-day averages for 90 days ago period (days 90-96 ago)
+    past_90d_dates = [current_date - timedelta(days=i) for i in range(90, 97)]
+    past_90d_data = df[df['date'].isin(past_90d_dates)]
+    
+    # Calculate current rolling 7-day averages
+    current_usdc = current_7d_data[current_7d_data['stablecoin_symbol'] == 'USDC'].groupby('chain')['circulating'].mean()
+    current_total = current_7d_data.groupby(['chain', 'date'])['circulating'].sum().groupby('chain').mean()
+    current_usdc_pct = current_usdc / current_total
+    
+    # Calculate past rolling 7-day averages (7d ago)
+    past_usdc = past_7d_data[past_7d_data['stablecoin_symbol'] == 'USDC'].groupby('chain')['circulating'].mean()
+    past_total = past_7d_data.groupby(['chain', 'date'])['circulating'].sum().groupby('chain').mean()
+    past_usdc_pct = past_usdc / past_total
+    
+    # Calculate past rolling 7-day averages (30d ago)
+    thirty_days_ago_usdc = past_30d_data[past_30d_data['stablecoin_symbol'] == 'USDC'].groupby('chain')['circulating'].mean()
+    thirty_days_ago_total = past_30d_data.groupby(['chain', 'date'])['circulating'].sum().groupby('chain').mean()
+    thirty_days_ago_usdc_pct = thirty_days_ago_usdc / thirty_days_ago_total
+    
+    # Calculate past rolling 7-day averages (90d ago)
+    ninety_days_ago_usdc = past_90d_data[past_90d_data['stablecoin_symbol'] == 'USDC'].groupby('chain')['circulating'].mean()
+    ninety_days_ago_total = past_90d_data.groupby(['chain', 'date'])['circulating'].sum().groupby('chain').mean()
+    ninety_days_ago_usdc_pct = ninety_days_ago_usdc / ninety_days_ago_total
+    
+    # Calculate growth metrics (7d)
+    usdc_growth_7d = current_usdc - past_usdc
+    total_growth_7d = current_total - past_total
+    usdc_growth_rate_7d = (usdc_growth_7d / past_usdc).fillna(0)
+    total_growth_rate_7d = (total_growth_7d / past_total).fillna(0)
+    usdc_pct_change_7d = current_usdc_pct - past_usdc_pct
+    
+    # Calculate growth metrics (30d)
+    usdc_growth_30d = current_usdc - thirty_days_ago_usdc
+    total_growth_30d = current_total - thirty_days_ago_total
+    usdc_growth_rate_30d = (usdc_growth_30d / thirty_days_ago_usdc).fillna(0)
+    total_growth_rate_30d = (total_growth_30d / thirty_days_ago_total).fillna(0)
+    usdc_pct_change_30d = current_usdc_pct - thirty_days_ago_usdc_pct
+    
+    # Calculate growth metrics (90d)
+    usdc_growth_90d = current_usdc - ninety_days_ago_usdc
+    total_growth_90d = current_total - ninety_days_ago_total
+    usdc_growth_rate_90d = (usdc_growth_90d / ninety_days_ago_usdc).fillna(0)
+    total_growth_rate_90d = (total_growth_90d / ninety_days_ago_total).fillna(0)
+    usdc_pct_change_90d = current_usdc_pct - ninety_days_ago_usdc_pct
+    
+    # Get USDC and USDT status from metadata (using current 7-day data)
+    current_meta = current_7d_data.drop(columns=['date', 'circulating']).drop_duplicates()
+    usdc_status = current_meta[current_meta['stablecoin_symbol'] == 'USDC'].groupby('chain')['native_bridged_standard'].apply(
+        lambda x: (
+            'USDT0' if any(val == 'USDT0' for val in x.values)
+            else 'native' if any(val == 'native' for val in x.values)
+            else 'Bridged'
+        )
+    )
+    
+    usdt_status = current_meta[current_meta['stablecoin_symbol'] == 'USDT'].groupby('chain')['native_bridged_standard'].apply(
+        lambda x: (
+            'USDT0' if any(val == 'USDT0' for val in x.values)
+            else 'native' if any(val == 'native' for val in x.values)
+            else 'Bridged'
+        )
+    )
+    
+    # Get dominant stablecoin (using average of current 7-day period)
+    dominant_stablecoins = current_7d_data.groupby(['chain', 'stablecoin_symbol'])['circulating'].mean().reset_index()
+    dominant_stablecoins = dominant_stablecoins.groupby('chain').apply(
+        lambda x: x.loc[x['circulating'].idxmax(), 'stablecoin_symbol']
+    )
+    
+    # Get chain launch dates
+    chain_launch_dates = df[df['date'] <= current_date].groupby('chain')['date'].min()
+    
+    # Create records for each chain
+    for chain in current_total.index:
+        if chain in current_usdc.index:
+            rolling_data.append({
+                'Chain': chain,
+                'USDC Status': usdc_status.get(chain, 'Bridged'),
+                'USDT Status': usdt_status.get(chain, 'Bridged'),
+                'Chain Launch Date': chain_launch_dates.get(chain, pd.NaT).strftime('%Y-%m-%d') if pd.notnull(chain_launch_dates.get(chain, pd.NaT)) else 'N/A',
+                'Dominant Stablecoin': dominant_stablecoins.get(chain, 'Unknown'),
+                'Current USDC Amount': current_usdc.get(chain, 0),
+                'Total Circulating Stables': current_total.get(chain, 0),
+                'USDC % of Total': current_usdc_pct.get(chain, 0),
+                'USDC Growth (7d)': usdc_growth_7d.get(chain, 0),
+                'USDC % Change (7d)': usdc_growth_rate_7d.get(chain, 0),
+                'USDC % of Total Change (7d)': usdc_pct_change_7d.get(chain, 0),
+                'Total Growth (7d)': total_growth_7d.get(chain, 0),
+                'Total % Change (7d)': total_growth_rate_7d.get(chain, 0),
+                'USDC Growth (30d)': usdc_growth_30d.get(chain, 0),
+                'USDC % Change (30d)': usdc_growth_rate_30d.get(chain, 0),
+                'USDC % of Total Change (30d)': usdc_pct_change_30d.get(chain, 0),
+                'Total Growth (30d)': total_growth_30d.get(chain, 0),
+                'Total % Change (30d)': total_growth_rate_30d.get(chain, 0),
+                'USDC Growth (90d)': usdc_growth_90d.get(chain, 0),
+                'USDC % Change (90d)': usdc_growth_rate_90d.get(chain, 0),
+                'USDC % of Total Change (90d)': usdc_pct_change_90d.get(chain, 0),
+                'Total Growth (90d)': total_growth_90d.get(chain, 0),
+                'Total % Change (90d)': total_growth_rate_90d.get(chain, 0)
+            })
+
+# Create DataFrame from rolling data (only latest date)
+rolling_df = pd.DataFrame(rolling_data)
+
+# Sort by USDC Growth (7d) in descending order
+rolling_df = rolling_df.sort_values('USDC Growth (7d)', ascending=False)
+
+# Get only the latest date's data (since we're only keeping latest, all data is from latest date)
+latest_rolling = rolling_df.copy()
+
+# Save only the latest data to CSV
+latest_rolling.to_csv('usdc_rolling_7d_analysis.csv', index=False)
+
+# Format for printing
+latest_rolling_print = latest_rolling.copy()
+
+# Format values for printing
+latest_rolling_print['Current USDC Amount'] = latest_rolling_print['Current USDC Amount'].apply(lambda x: f"${x:,.2f}")
+latest_rolling_print['Total Circulating Stables'] = latest_rolling_print['Total Circulating Stables'].apply(lambda x: f"${x:,.2f}")
+latest_rolling_print['USDC % of Total'] = latest_rolling_print['USDC % of Total'].apply(lambda x: f"{x:.2%}")
+latest_rolling_print['USDC Growth (7d)'] = latest_rolling_print['USDC Growth (7d)'].apply(lambda x: f"${x:,.2f}")
+latest_rolling_print['USDC % Change (7d)'] = latest_rolling_print['USDC % Change (7d)'].apply(lambda x: f"{x:.2%}")
+latest_rolling_print['USDC % of Total Change (7d)'] = latest_rolling_print['USDC % of Total Change (7d)'].apply(lambda x: f"{x:+.2%}")
+latest_rolling_print['Total Growth (7d)'] = latest_rolling_print['Total Growth (7d)'].apply(lambda x: f"${x:,.2f}")
+latest_rolling_print['Total % Change (7d)'] = latest_rolling_print['Total % Change (7d)'].apply(lambda x: f"{x:.2%}")
+latest_rolling_print['USDC Growth (30d)'] = latest_rolling_print['USDC Growth (30d)'].apply(lambda x: f"${x:,.2f}")
+latest_rolling_print['USDC % Change (30d)'] = latest_rolling_print['USDC % Change (30d)'].apply(lambda x: f"{x:.2%}")
+latest_rolling_print['USDC % of Total Change (30d)'] = latest_rolling_print['USDC % of Total Change (30d)'].apply(lambda x: f"{x:+.2%}")
+latest_rolling_print['Total Growth (30d)'] = latest_rolling_print['Total Growth (30d)'].apply(lambda x: f"${x:,.2f}")
+latest_rolling_print['Total % Change (30d)'] = latest_rolling_print['Total % Change (30d)'].apply(lambda x: f"{x:.2%}")
+latest_rolling_print['USDC Growth (90d)'] = latest_rolling_print['USDC Growth (90d)'].apply(lambda x: f"${x:,.2f}")
+latest_rolling_print['USDC % Change (90d)'] = latest_rolling_print['USDC % Change (90d)'].apply(lambda x: f"{x:.2%}")
+latest_rolling_print['USDC % of Total Change (90d)'] = latest_rolling_print['USDC % of Total Change (90d)'].apply(lambda x: f"{x:+.2%}")
+latest_rolling_print['Total Growth (90d)'] = latest_rolling_print['Total Growth (90d)'].apply(lambda x: f"${x:,.2f}")
+latest_rolling_print['Total % Change (90d)'] = latest_rolling_print['Total % Change (90d)'].apply(lambda x: f"{x:.2%}")
+
+print(f"\n4. Rolling 7-Day USDC Growth Analysis (Latest Date: {all_dates[-1].strftime('%Y-%m-%d')}):")
+print(latest_rolling_print.to_string())
+
 # 5. USDT0 Performance Analysis
 usdt0_data = df[df['native_bridged_standard'] == 'USDT0']
 latest_usdt0 = usdt0_data[usdt0_data['date'] == latest_date]
@@ -273,11 +448,21 @@ dominant_stablecoins = latest_data.groupby('chain').apply(
 )
 usdc_launch_dates['Dominant Stablecoin'] = dominant_stablecoins
 
+# Get USDC native/bridged status from metadata
+usdc_status = meta_df[meta_df['stablecoin_symbol'] == 'USDC'].groupby('chain')['native_bridged_standard'].apply(
+    lambda x: (
+        'USDT0' if any(val == 'USDT0' for val in x.values)
+        else 'native' if any(val == 'native' for val in x.values)
+        else 'Bridged'
+    )
+)
+
 # Save USDC launch dates data
 usdc_launch_dates_df = pd.DataFrame({
     'Chain': usdc_launch_dates.index,
     'Launch Date': usdc_launch_dates['date'].dt.strftime('%Y-%m-%d'),
     'Current Amount': usdc_launch_dates['circulating'],
+    'USDC Status': usdc_status.reindex(usdc_launch_dates.index, fill_value='Bridged'),
     'USDC % of Total': usdc_launch_dates['USDC % of Total'],
     'Dominant Stablecoin': usdc_launch_dates['Dominant Stablecoin']
 })
@@ -771,6 +956,15 @@ stable_growth_7d = get_stable_growth(seven_days_ago)
 stable_growth_30d = get_stable_growth(thirty_days_ago)
 stable_growth_90d = get_stable_growth(ninety_days_ago)
 
+# Calculate historical stablecoin circulation for ratio calculations
+seven_days_ago_stable_data = stable_data[stable_data['date'] == seven_days_ago]
+thirty_days_ago_stable_data = stable_data[stable_data['date'] == thirty_days_ago]
+ninety_days_ago_stable_data = stable_data[stable_data['date'] == ninety_days_ago]
+
+chain_stable_totals_7d = seven_days_ago_stable_data.groupby('chain')['circulating'].sum()
+chain_stable_totals_30d = thirty_days_ago_stable_data.groupby('chain')['circulating'].sum()
+chain_stable_totals_90d = ninety_days_ago_stable_data.groupby('chain')['circulating'].sum()
+
 # Create stablecoin metrics DataFrame
 stable_metrics = pd.DataFrame({
     'Chain': chain_stable_totals.index,
@@ -778,11 +972,27 @@ stable_metrics = pd.DataFrame({
     'USDC % of Stables': chain_usdc_percentage,
     'Stablecoin Growth (7d)': stable_growth_7d,
     'Stablecoin Growth (30d)': stable_growth_30d,
-    'Stablecoin Growth (90d)': stable_growth_90d
+    'Stablecoin Growth (90d)': stable_growth_90d,
+    'Stablecoin Circulation (7d ago)': chain_stable_totals_7d,
+    'Stablecoin Circulation (30d ago)': chain_stable_totals_30d,
+    'Stablecoin Circulation (90d ago)': chain_stable_totals_90d
 })
 
 # Merge TVL data with stablecoin metrics
 tvl_stable = tvl_stable.merge(stable_metrics, on='Chain', how='left')
+
+# Calculate TVL/Stablecoin ratios
+tvl_stable['Current TVL/Stablecoin Ratio'] = tvl_stable['Current TVL'] / tvl_stable['Current Stablecoin Circulation']
+
+# Calculate historical TVL amounts for ratio calculations
+tvl_stable['TVL 7d ago'] = tvl_stable['Current TVL'] / (1 + tvl_stable['7d Growth'])
+tvl_stable['TVL 30d ago'] = tvl_stable['Current TVL'] / (1 + tvl_stable['30d Growth'])
+tvl_stable['TVL 90d ago'] = tvl_stable['Current TVL'] / (1 + tvl_stable['90d Growth'])
+
+# Calculate historical TVL/Stablecoin ratios
+tvl_stable['TVL/Stablecoin Ratio (7d ago)'] = tvl_stable['TVL 7d ago'] / tvl_stable['Stablecoin Circulation (7d ago)']
+tvl_stable['TVL/Stablecoin Ratio (30d ago)'] = tvl_stable['TVL 30d ago'] / tvl_stable['Stablecoin Circulation (30d ago)']
+tvl_stable['TVL/Stablecoin Ratio (90d ago)'] = tvl_stable['TVL 90d ago'] / tvl_stable['Stablecoin Circulation (90d ago)']
 
 # Convert DeFi Launch Date to datetime
 tvl_stable['DeFi Launch Date'] = pd.to_datetime(tvl_stable['DeFi Launch Date'])
@@ -799,6 +1009,10 @@ tvl_stable_print['90d Growth'] = tvl_stable_print['90d Growth'].apply(lambda x: 
 tvl_stable_print['Stablecoin Growth (7d)'] = tvl_stable_print['Stablecoin Growth (7d)'].apply(lambda x: f"{x:+.2%}" if pd.notnull(x) else "N/A")
 tvl_stable_print['Stablecoin Growth (30d)'] = tvl_stable_print['Stablecoin Growth (30d)'].apply(lambda x: f"{x:+.2%}" if pd.notnull(x) else "N/A")
 tvl_stable_print['Stablecoin Growth (90d)'] = tvl_stable_print['Stablecoin Growth (90d)'].apply(lambda x: f"{x:+.2%}" if pd.notnull(x) else "N/A")
+tvl_stable_print['Current TVL/Stablecoin Ratio'] = tvl_stable_print['Current TVL/Stablecoin Ratio'].apply(lambda x: f"{x:.2f}" if pd.notnull(x) else "N/A")
+tvl_stable_print['TVL/Stablecoin Ratio (7d ago)'] = tvl_stable_print['TVL/Stablecoin Ratio (7d ago)'].apply(lambda x: f"{x:.2f}" if pd.notnull(x) else "N/A")
+tvl_stable_print['TVL/Stablecoin Ratio (30d ago)'] = tvl_stable_print['TVL/Stablecoin Ratio (30d ago)'].apply(lambda x: f"{x:.2f}" if pd.notnull(x) else "N/A")
+tvl_stable_print['TVL/Stablecoin Ratio (90d ago)'] = tvl_stable_print['TVL/Stablecoin Ratio (90d ago)'].apply(lambda x: f"{x:.2f}" if pd.notnull(x) else "N/A")
 
 # sort table by descending launch date
 tvl_stable_print = tvl_stable_print.sort_values('DeFi Launch Date', ascending=False)
@@ -809,31 +1023,5 @@ tvl_stable.to_csv('chain_tvl_stable_analysis.csv', index=False)
 print("\n12. Chain TVL and Stablecoin Analysis (Sorted by Current TVL):")
 print(tvl_stable_print.to_string())
 
-# After all CSV files are generated, upload to Google Sheets
-try:
-    from google_sheets_upload import main as upload_to_sheets
-    # Add all analysis files to the list of files to upload with their sheet names
-    files_to_upload = [
-        # ('stablecoins_list.csv', 'Stablecoins List'),
-        # ('top_100_stablecoins.csv', 'Top 100 Stablecoins'),
-        # ('all_stablecoins_chain_distribution.csv', 'Chain Distribution'),
-        ('meta_stablecoins_chain_distribution.csv', 'Meta Distribution'),
-        ('usdt_launch_dates.csv', 'USDT Launches'),
-        ('usdt0_performance.csv', 'USDT0 Launches'),
-        ('usdc_launch_dates.csv', 'USDC Launches'),
-
-        ('usdc_growth_analysis.csv', 'USDC Growth Analysis'),
-        ('stablecoin_launch_analysis.csv', 'Stablecoin Launch Analysis'),
-
-        ('chain_stablecoin_growth.csv', 'Chain Growth Analysis'),
-        ('chain_launch_analysis.csv', 'Chain Stables Launch Analysis'),
-
-        ('usdt_growth_analysis.csv', 'USDT Growth Analysis'),
-        ('stablecoin_aggregate_growth.csv', 'Stablecoin_growth'),
-        
-        ('chain_tvl_stable_analysis.csv', 'Defi Chain Launch Analysis')
-    ]
-    upload_to_sheets(files_to_upload)
-except Exception as e:
-    print(f"Error uploading to Google Sheets: {e}")
-    print("Please make sure you have set up the Google Sheets API credentials")
+print("\nAll analysis complete! CSV files have been generated.")
+print("Run 'python src/google_sheets_upload.py' to upload the data to Google Sheets.")

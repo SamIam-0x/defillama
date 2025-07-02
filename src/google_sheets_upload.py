@@ -108,16 +108,39 @@ def main(files_to_upload=None):
         # Default list of CSV files and their corresponding sheet names if none provided
         if files_to_upload is None:
             files_to_upload = [
-                ('usdt_launch_dates.csv', 'USDT Launch Dates'),
+                # Core metadata and launch analysis
+                ('stablecoin_metadata.csv', 'Stablecoin Metadata'),
+                ('meta_stablecoins_chain_distribution.csv', 'Meta Distribution'),
+                
+                # Launch dates and performance
+                ('usdt_launch_dates.csv', 'USDT Launches'),
+                ('usdc_launch_dates.csv', 'USDC Launches'),
+                ('usdt0_performance.csv', 'USDT0 Launches'),
+                
+                # Growth analysis
                 ('usdc_growth_analysis.csv', 'USDC Growth Analysis'),
-                ('usdt0_performance.csv', 'USDT0 Performance'),
-                ('usdc_launch_dates.csv', 'USDC Launch Dates'),
-                ('stablecoin_launch_analysis.csv', 'Stablecoin Launch Analysis'),
-                ('chain_stablecoin_growth.csv', '30-Day Growth Analysis'),
+                ('usdc_rolling_7d_analysis.csv', 'USDC Rolling 7D Analysis'),
                 ('usdt_growth_analysis.csv', 'USDT Growth Analysis'),
-                ('stablecoin_aggregate_growth.csv', 'Stablecoin_growth'),
-                ('chain_launch_analysis.csv', 'Chain Launch Analysis'),
-                ('chain_tvl_stable_analysis.csv', 'Defi Chain Launch')
+                
+                # Chain analysis
+                ('chain_stablecoin_growth.csv', 'Chains Total Stables Growth'),
+                ('chain_launch_analysis.csv', 'Chain launch date of 1st stables'),
+                
+                # Comprehensive launch and growth analysis
+                ('stablecoin_launch_analysis.csv', 'Stablecoin Launch Analysis'),
+                ('stablecoin_aggregate_growth.csv', 'Stablecoin Launches Overall'),
+                
+                # TVL and DeFi analysis
+                ('chain_tvl_stable_analysis.csv', 'Defi TVL by Chain'),
+                
+                # Market share analysis (from defillama_import.py)
+                ('usdc_market_share_90days.csv', 'USDC Market Share 90 Days'),
+                ('usdc_market_share_summary.csv', 'USDC Market Share Summary'),
+                
+                # Raw data files (optional)
+                # ('all_stablecoins_chain_distribution.csv', 'Chain Distribution'),
+                # ('stablecoins_list.csv', 'Stablecoins List'),
+                # ('top_100_stablecoins.csv', 'Top 100 Stablecoins'),
             ]
         
         for csv_file, sheet_name in files_to_upload:
