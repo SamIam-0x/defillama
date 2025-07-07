@@ -484,9 +484,9 @@ upload_choice = input("Upload results to Google Sheets? (y/n): ").strip().lower(
 if upload_choice in ['y', 'yes']:
     print("📊 Uploading to Google Sheets...")
     try:
-        subprocess.run(['python', 'src/google_sheets_upload.py'])
+        subprocess.run(['venv/bin/python', 'src/google_sheets_upload.py'])
         print("✅ Upload complete!")
     except Exception as e:
         print(f"❌ Upload failed: {e}")
 else:
-    print("📁 Results saved locally. Run 'python src/google_sheets_upload.py' to upload later.")
+    print("📁 Results saved locally. Run 'venv/bin/python src/google_sheets_upload.py' to upload later.")
