@@ -11,4 +11,4 @@ credentials.json
 *.csv
 *.json
 chain_data.db
-
+*.png   

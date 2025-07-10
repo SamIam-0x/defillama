@@ -137,7 +137,8 @@ if fetch_new_data:
         'Optimism', 
         'Arbitrum', 
         'Flare', 
-        'Hyperliquid L1'
+        'Hyperliquid L1',
+        'OP Mainnet'
         ]
     df.loc[(df['stablecoin_symbol'] == 'USDT') & (df['chain'].isin(usdt0_chains)), 'native_bridged_standard'] = 'USDT0'
 
@@ -157,7 +158,7 @@ if fetch_new_data:
         'Algorand', 
         'Near', 
         'Hedera',
-        'Polkadot', 
+        'Polkadot',
         'Tron', 
         'Celo', 
         'Linea', 
@@ -475,18 +476,14 @@ else:
         # run stablecoin_analysis.py with existing data
         subprocess.run(['venv/bin/python', 'src/stablecoin_analysis.py'])
 
-# After analysis is complete, offer to upload to Google Sheets
+# After analysis is complete, automatically upload to Google Sheets
 print("\n" + "=" * 60)
 print("Analysis Complete!")
 print("=" * 60)
 
-upload_choice = input("Upload results to Google Sheets? (y/n): ").strip().lower()
-if upload_choice in ['y', 'yes']:
-    print("📊 Uploading to Google Sheets...")
-    try:
-        subprocess.run(['venv/bin/python', 'src/google_sheets_upload.py'])
-        print("✅ Upload complete!")
-    except Exception as e:
-        print(f"❌ Upload failed: {e}")
-else:
-    print("📁 Results saved locally. Run 'venv/bin/python src/google_sheets_upload.py' to upload later.")
+print("📊 Uploading to Google Sheets...")
+try:
+    subprocess.run(['venv/bin/python', 'src/google_sheets_upload.py'])
+    print("✅ Upload complete!")
+except Exception as e:
+    print(f"❌ Upload failed: {e}")

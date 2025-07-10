@@ -85,6 +85,12 @@ def update_sheet(service, sheet_name, data):
     # Get or create the sheet
     sheet_id = get_or_create_sheet(service, sheet_name)
     
+    # Clear the entire sheet first
+    service.spreadsheets().values().clear(
+        spreadsheetId=SPREADSHEET_ID,
+        range=f"{sheet_name}!A:Z"  # or a larger range
+    ).execute()
+    
     # Update with new data
     body = {
         'values': values
@@ -127,7 +133,7 @@ def main(files_to_upload=None):
                 ('chain_launch_analysis.csv', 'Chain launch date of 1st stables'),
                 
                 # Comprehensive launch and growth analysis
-                ('stablecoin_launch_analysis.csv', 'Stablecoin Launch Analysis'),
+                ('stablecoin_launch_analysis.csv', 'Stablecoin Launch by chain Dates'),
                 ('stablecoin_aggregate_growth.csv', 'Stablecoin Launches Overall'),
                 
                 # TVL and DeFi analysis
