@@ -154,7 +154,7 @@ if fetch_new_data:
         'Noble', 
         'Stellar', 
         'Aptos', 
-        'Optimism', 
+        'OP Mainnet', 
         'Algorand', 
         'Near', 
         'Hedera',
@@ -163,7 +163,7 @@ if fetch_new_data:
         'Celo', 
         'Linea', 
         'Unichain', 
-        'ZKSync Era', 
+        'ZKsync Era', 
         'Sonic', 
         'World Chain', 
         'Ripple',
@@ -232,10 +232,27 @@ if fetch_new_data:
         supply = today_total_stablecoins[chain]
         print(f"{i:2d}. {chain}: ${supply:,.2f}")
 
-    # Calculate daily market share for top 10 chains only
+    # Combine top 10 chains with all USDC native chains
+    # First, get all chains with native USDC that have data in our dataset
+    usdc_native_chains_with_data = [chain for chain in usdc_native_chains if chain in usdc_chains]
+    
+    # Combine top 10 chains with native USDC chains and remove duplicates
+    combined_chains = list(set(top_10_total_chains + usdc_native_chains_with_data))
+    
+    print(f"\nCombined analysis will include:")
+    print(f"  • Top 10 chains by stablecoin volume: {len(top_10_total_chains)} chains")
+    print(f"  • USDC native chains with data: {len(usdc_native_chains_with_data)} chains")
+    print(f"  • Total unique chains to analyze: {len(combined_chains)} chains")
+    
+    # Show which native USDC chains are being included
+    native_chains_not_in_top10 = [chain for chain in usdc_native_chains_with_data if chain not in top_10_total_chains]
+    if native_chains_not_in_top10:
+        print(f"  • Additional native USDC chains (not in top 10): {', '.join(native_chains_not_in_top10)}")
+
+    # Calculate daily market share for combined set of chains
     usdc_market_share_data = []
 
-    for chain in top_10_total_chains:
+    for chain in combined_chains:
         print(f"\nProcessing USDC market share for chain: {chain}")
         
         # Get data for this specific chain
@@ -299,8 +316,9 @@ if fetch_new_data:
         print(f"\nUSDC market share data saved to usdc_market_share_90days.csv")
         print(f"Total records: {len(usdc_market_share_df)}")
         
-        # Print summary statistics across top 10 chains
-        print("\n=== USDC Market Share Summary - Top 10 Chains by Total Stablecoins (Last 90 Days) ===")
+        # Print summary statistics across all analyzed chains
+        print(f"\n=== USDC Market Share Summary - Top 10 Chains + Native USDC Chains (Last 90 Days) ===")
+        print(f"Total chains analyzed: {len(combined_chains)}")
         summary_stats = usdc_market_share_df.groupby('chain')['usdc_market_share_pct'].agg([
             'mean', 'max', 'min', 'std'
         ]).round(2)
@@ -319,6 +337,14 @@ if fetch_new_data:
             today_usdc_supplies[chain] = usdc_supply
         
         summary_stats['Today_USDC_Supply'] = summary_stats.index.map(today_usdc_supplies)
+        
+        # Add a column to identify chain type for better understanding
+        summary_stats['Chain_Type'] = summary_stats.index.map(
+            lambda x: 'Top 10 + Native' if x in top_10_total_chains and x in usdc_native_chains_with_data
+            else 'Top 10 Only' if x in top_10_total_chains
+            else 'Native Only'
+        )
+        
         summary_stats = summary_stats.sort_values('Today_Total_Stablecoins', ascending=False)
         
         print(summary_stats.to_string())
