@@ -138,7 +138,8 @@ if fetch_new_data:
         'Arbitrum', 
         'Flare', 
         'Hyperliquid L1',
-        'OP Mainnet'
+        'OP Mainnet',
+        'Rootstock'
         ]
     df.loc[(df['stablecoin_symbol'] == 'USDT') & (df['chain'].isin(usdt0_chains)), 'native_bridged_standard'] = 'USDT0'
 

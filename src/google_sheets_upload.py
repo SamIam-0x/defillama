@@ -69,11 +69,20 @@ def get_or_create_sheet(service, sheet_name):
     return new_sheet['properties']['sheetId']
 
 def clean_dataframe(df):
-    # Replace NaN values with empty strings
-    df = df.replace({np.nan: ''})
-    # Convert all values to strings to ensure proper JSON serialization
-    df = df.astype(str)
-    return df
+    # Create a copy to avoid modifying the original DataFrame
+    df_clean = df.copy()
+    
+    # For each column, handle NaN values appropriately while preserving data types
+    for col in df_clean.columns:
+        if df_clean[col].dtype in ['float64', 'int64']:
+            # For numeric columns, convert NaN to None (which becomes null in JSON)
+            # This allows Google Sheets to treat them as empty cells while preserving numeric type
+            df_clean[col] = df_clean[col].where(pd.notna(df_clean[col]), None)
+        else:
+            # For non-numeric columns, convert NaN to empty strings
+            df_clean[col] = df_clean[col].fillna('')
+    
+    return df_clean
 
 def update_sheet(service, sheet_name, data):
     # Clean the data
