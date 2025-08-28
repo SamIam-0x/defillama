@@ -139,7 +139,8 @@ if fetch_new_data:
         'Flare', 
         'Hyperliquid L1',
         'OP Mainnet',
-        'Rootstock'
+        'Rootstock',
+        'Polygon'
         ]
     df.loc[(df['stablecoin_symbol'] == 'USDT') & (df['chain'].isin(usdt0_chains)), 'native_bridged_standard'] = 'USDT0'
 
@@ -169,7 +170,8 @@ if fetch_new_data:
         'World Chain', 
         'Ripple',
         'XRPL',
-        'Codex'
+        'Codex',
+        'Sei'
         ]
     df.loc[(df['stablecoin_symbol'] == 'USDC') & (df['chain'].isin(usdc_native_chains)), 'native_bridged_standard'] = 'native'
 

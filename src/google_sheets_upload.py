@@ -72,15 +72,8 @@ def clean_dataframe(df):
     # Create a copy to avoid modifying the original DataFrame
     df_clean = df.copy()
     
-    # For each column, handle NaN values appropriately while preserving data types
-    for col in df_clean.columns:
-        if df_clean[col].dtype in ['float64', 'int64']:
-            # For numeric columns, convert NaN to None (which becomes null in JSON)
-            # This allows Google Sheets to treat them as empty cells while preserving numeric type
-            df_clean[col] = df_clean[col].where(pd.notna(df_clean[col]), None)
-        else:
-            # For non-numeric columns, convert NaN to empty strings
-            df_clean[col] = df_clean[col].fillna('')
+    # Replace all NaN values with None first (which will serialize as null in JSON)
+    df_clean = df_clean.where(pd.notna(df_clean), None)
     
     return df_clean
 
@@ -88,8 +81,28 @@ def update_sheet(service, sheet_name, data):
     # Clean the data
     data = clean_dataframe(data)
     
-    # Convert DataFrame to list of lists
-    values = [data.columns.tolist()] + data.values.tolist()
+    # Convert DataFrame to list of lists, ensuring JSON serializable values
+    def make_json_serializable(val):
+        if pd.isna(val) or val is np.nan:
+            return ""  # Empty string for Google Sheets
+        elif isinstance(val, (np.integer, np.floating)):
+            # Handle special float values that aren't JSON serializable
+            if np.isinf(val) or np.isneginf(val):
+                return ""  # Empty string for infinite values
+            return val.item()  # Convert numpy types to Python native types
+        elif isinstance(val, (int, float)):
+            # Handle Python native numeric types
+            if val == float('inf') or val == float('-inf'):
+                return ""  # Empty string for infinite values
+            return val
+        else:
+            return val
+    
+    # Convert DataFrame to list of lists with proper type handling
+    values = [data.columns.tolist()]
+    for _, row in data.iterrows():
+        row_values = [make_json_serializable(val) for val in row]
+        values.append(row_values)
     
     # Get or create the sheet
     sheet_id = get_or_create_sheet(service, sheet_name)
@@ -111,7 +124,7 @@ def update_sheet(service, sheet_name, data):
     service.spreadsheets().values().update(
         spreadsheetId=SPREADSHEET_ID,
         range=range_name,
-        valueInputOption='RAW',
+        valueInputOption='USER_ENTERED',
         body=body
     ).execute()
 
