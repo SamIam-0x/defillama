@@ -140,7 +140,8 @@ if fetch_new_data:
         'Hyperliquid L1',
         'OP Mainnet',
         'Rootstock',
-        'Polygon'
+        'Polygon',
+        'Plasma'
         ]
     df.loc[(df['stablecoin_symbol'] == 'USDT') & (df['chain'].isin(usdt0_chains)), 'native_bridged_standard'] = 'USDT0'
 
@@ -171,7 +172,11 @@ if fetch_new_data:
         'Ripple',
         'XRPL',
         'Codex',
-        'Sei'
+        'Sei',
+        'XDC',
+        'Plume',
+        'Ink',
+        'Hyperliquid L1',
         ]
     df.loc[(df['stablecoin_symbol'] == 'USDC') & (df['chain'].isin(usdc_native_chains)), 'native_bridged_standard'] = 'native'
 
@@ -193,7 +198,8 @@ if fetch_new_data:
         'Tezos',  # Tezos Token via Tezos Blockchain
         'Ton',  # Ton Jetton via Ton Blockchain
         'Aptos',  # Fungible Asset via Aptos Blockchain
-        'Kaia'  # Fungible Asset via Kaia Blockchain
+        'Kaia',  # Fungible Asset via Kaia Blockchain
+        
     ]
     df.loc[(df['stablecoin_symbol'] == 'USDT') & (df['chain'].isin(usdt_native_chains)), 'native_bridged_standard'] = 'native'
 
