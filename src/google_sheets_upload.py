@@ -1,6 +1,4 @@
-from google.oauth2.credentials import Credentials
-from google_auth_oauthlib.flow import InstalledAppFlow
-from google.auth.transport.requests import Request
+from google.oauth2 import service_account
 from googleapiclient.discovery import build
 import os.path
 import pandas as pd
@@ -13,6 +11,18 @@ SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
 SPREADSHEET_ID = '1BkCCQKhBUrazaa-x260kb1cUswAAlt_d0xPS4O22-bc'
 
 def get_credentials():
+    """Get credentials using service account (doesn't expire)"""
+    # Try service account first (key.json)
+    if os.path.exists('key.json'):
+        creds = service_account.Credentials.from_service_account_file(
+            'key.json', scopes=SCOPES)
+        return creds
+    
+    # Fallback to OAuth flow if service account not available
+    from google.oauth2.credentials import Credentials
+    from google_auth_oauthlib.flow import InstalledAppFlow
+    from google.auth.transport.requests import Request
+    
     creds = None
     # The file token.json stores the user's access and refresh tokens, and is
     # created automatically when the authorization flow completes for the first time.
@@ -21,23 +31,35 @@ def get_credentials():
     # If there are no (valid) credentials available, let the user log in.
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
-        else:
+            try:
+                creds.refresh(Request())
+            except Exception as e:
+                print(f"Token refresh failed: {e}")
+                print("Deleting expired token and re-authenticating...")
+                if os.path.exists('token.json'):
+                    os.remove('token.json')
+                creds = None
+        
+        if not creds:
             if not os.path.exists('credentials.json'):
                 raise FileNotFoundError(
-                    "credentials.json file not found. Please set up Google Sheets API credentials:\n"
+                    "Neither key.json (service account) nor credentials.json (OAuth) found.\n"
+                    "Please set up Google Sheets API credentials:\n"
+                    "Option 1 (Recommended): Service Account\n"
                     "1. Go to https://console.cloud.google.com/\n"
-                    "2. Create a new project or select existing one\n"
-                    "3. Enable Google Sheets API\n"
-                    "4. Create credentials (OAuth 2.0 Client ID)\n"
-                    "5. Download the credentials and save as 'credentials.json' in the project root"
+                    "2. Create a service account\n"
+                    "3. Download the key and save as 'key.json'\n"
+                    "4. Share the spreadsheet with the service account email\n\n"
+                    "Option 2: OAuth 2.0\n"
+                    "1. Create OAuth 2.0 Client ID credentials\n"
+                    "2. Download and save as 'credentials.json'"
                 )
             flow = InstalledAppFlow.from_client_secrets_file(
                 'credentials.json', SCOPES)
             creds = flow.run_local_server(port=0)
-        # Save the credentials for the next run
-        with open('token.json', 'w') as token:
-            token.write(creds.to_json())
+            # Save the credentials for the next run
+            with open('token.json', 'w') as token:
+                token.write(creds.to_json())
     return creds
 
 def get_or_create_sheet(service, sheet_name):
