@@ -582,6 +582,10 @@ print(comprehensive_df.head()[['chain', 'defi_tvl', 'stablecoin_mcap']].to_strin
 # run stablecoin_analysis.py
 subprocess.run(['venv/bin/python', 'src/stablecoin_analysis.py'])
 
+# run lending TVL by chain analysis
+print("\n📊 Running Lending TVL by Chain Analysis...")
+subprocess.run(['venv/bin/python', 'src/lending_tvl_by_chain.py'])
+
 # After analysis is complete, automatically upload to Google Sheets
 print("\n" + "=" * 60)
 print("Analysis Complete!")
