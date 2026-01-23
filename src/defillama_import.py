@@ -586,6 +586,18 @@ subprocess.run(['venv/bin/python', 'src/stablecoin_analysis.py'])
 print("\n📊 Running Lending TVL by Chain Analysis...")
 subprocess.run(['venv/bin/python', 'src/lending_tvl_by_chain.py'])
 
+# run new chains lending growth analysis
+print("\n📊 Running New Chains Lending Growth Analysis (First 180 Days)...")
+subprocess.run(['venv/bin/python', 'src/new_chains_lending_growth_simple.py'])
+
+# run lending assets by chain analysis
+print("\n📊 Running Lending Assets by Chain Analysis...")
+subprocess.run(['venv/bin/python', 'src/lending_assets_by_chain.py'])
+
+# run LST/LRT TVL by chain analysis
+print("\n📊 Running LST/LRT TVL by Chain Analysis...")
+subprocess.run(['venv/bin/python', 'src/lst_lrt_tvl_by_chain.py'])
+
 # After analysis is complete, automatically upload to Google Sheets
 print("\n" + "=" * 60)
 print("Analysis Complete!")
